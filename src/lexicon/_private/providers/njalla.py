@@ -45,6 +45,8 @@ class Provider(BaseProvider):
 
     # Create record. If record already exists with the same content, do nothing'
     def create_record(self, rtype, name, content):
+        if rtype.lower() == 'srv':
+            return self._create_srv(name, content)
         params = {
             "domain": self.domain,
             "type": rtype,
@@ -67,16 +69,25 @@ class Provider(BaseProvider):
         result = self._api_call("list-records", params)
 
         records = result["records"]
-        processed_records = [
-            {
+        processed_records = []
+        for record in records:
+            if record["type"].lower == "srv":
+                content = " ".join([
+                    record["prio"],
+                    record["weight"],
+                    record["port"],
+                    record["content"],
+                ])
+            else:
+                content = record["content"]
+        processed_records.append({
                 "id": record["id"],
                 "type": record["type"],
                 "name": self._full_name(record["name"]),
                 "ttl": record["ttl"],
-                "content": record["content"],
-            }
-            for record in records
-        ]
+                "content": content,
+            })
+
         filtered_records = [
             record
             for record in processed_records
@@ -114,6 +125,24 @@ class Provider(BaseProvider):
 
         LOGGER.debug("delete_record: %s", True)
         return True
+    
+    def _create_srv(self, name, content):
+        parts = content.split()
+        params = {
+            "domain": self.domain,
+            "type": "SRV",
+            "ttl": 60,
+            "name": name,
+            "prio": int(parts[0]),
+            "weight": int(parts[1]),
+            "port": int(parts[2]),
+            "content": parts[3],
+        }
+        if self._get_lexicon_option("ttl"):
+            params["ttl"] = self._get_lexicon_option("ttl")
+        result = self._api_call("add-record", params)
+        LOGGER.debug("create_record: %s", result)
+        return result
 
     # Helpers
     def _api_call(self, method, params):
