@@ -45,12 +45,13 @@ class Provider(BaseProvider):
 
     # Create record. If record already exists with the same content, do nothing'
     def create_record(self, rtype, name, content, priority=None, weight=None, port=None):
+        rtype = rtype.upper()
         params = {
                 "domain": self.domain,
                 "type": rtype,
                 "name": name,
                 "content": content,
-                "ttl": 60,
+                "ttl": 1,
             }
         if rtype.lower() == 'srv':
             if any([x is None for x in [priority, weight, port]]):
@@ -63,6 +64,7 @@ class Provider(BaseProvider):
             
         if self._get_lexicon_option("ttl"):
             params["ttl"] = self._get_lexicon_option("ttl")
+        print(f"Doing request with params: {params}")
         result = self._api_call("add-record", params)
 
         LOGGER.debug("create_record: %s", result)
