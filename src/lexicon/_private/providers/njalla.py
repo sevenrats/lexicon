@@ -99,7 +99,8 @@ class Provider(BaseProvider):
                 and (content is None or record["content"] == content)
             )
         ]
-
+        print("FILTERED RECORDS")
+        print(filtered_records)
         LOGGER.debug("list_records: %s", filtered_records)
         return filtered_records
 
