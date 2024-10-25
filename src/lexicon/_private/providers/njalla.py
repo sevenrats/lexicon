@@ -74,20 +74,20 @@ class Provider(BaseProvider):
         processed_records = []
         for record in records:
             if record["type"].lower() == "srv":
-                content = " ".join([
+                _content = " ".join([
                     str(record["prio"]),
                     str(record["weight"]),
                     str(record["port"]),
                     record["content"],
                 ])
             else:
-                content = record["content"]
+                _content = record["content"]
             processed_records.append({
                 "id": record["id"],
                 "type": record["type"],
                 "name": self._full_name(record["name"]),
                 "ttl": record["ttl"],
-                "content": content,
+                "content": _content,
             })
         print("PROCESSED RECORDS")
         print(processed_records)
