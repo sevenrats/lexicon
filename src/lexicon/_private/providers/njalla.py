@@ -80,7 +80,7 @@ class Provider(BaseProvider):
                 ])
             else:
                 content = record["content"]
-        processed_records.append({
+            processed_records.append({
                 "id": record["id"],
                 "type": record["type"],
                 "name": self._full_name(record["name"]),
