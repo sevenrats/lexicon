@@ -29,24 +29,35 @@ class _ClientOperations:
     def __init__(self, provider: Provider):
         self.provider = provider
 
-    def create_record(self, rtype: str, name: str, content: str) -> bool:
+    def create_record(
+        self,
+        rtype: str,
+        name: str,
+        content: str,
+        priority: int | None = None,
+        weight: int | None = None,
+        port: int | None = None,
+    ) -> bool:
         """
         Create record. If record already exists with the same content, do nothing.
         """
-        return self.provider.create_record(rtype, name, content)
+        return self.provider.create_record(rtype, name, content, priority, weight, port)
 
     def list_records(
         self,
         rtype: str | None = None,
         name: str | None = None,
         content: str | None = None,
+        priority: int | None = None,
+        weight: int | None = None,
+        port: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         List all records. Return an empty list if no records found
         type, name and content are used to filter records.
         If possible filter during the query, otherwise filter after response is received.
         """
-        return self.provider.list_records(rtype, name, content)
+        return self.provider.list_records(rtype, name, content, priority, weight, port)
 
     def update_record(
         self,
