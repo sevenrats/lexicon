@@ -87,9 +87,9 @@ class Provider(BaseProvider):
             }
             if record["type"].lower() == "srv":
                 new.update({
-                    'priority': record["prio"]
-                    'weight': record["weight"]
-                    'port': record['port']
+                    'priority': record["prio"],
+                    'weight': record["weight"],
+                    'port': record['port'],
                 })
             processed_records.append(new)
         filtered_records = [
