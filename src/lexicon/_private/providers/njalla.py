@@ -92,8 +92,7 @@ class Provider(BaseProvider):
         print("PROCESSED RECORDS")
         print(processed_records)
         filtered_records = [
-            record
-            for record in processed_records
+            record for record in processed_records
             if (
                 (rtype is None or record["type"] == rtype)
                 and (name is None or record["name"] == self._full_name(name))
