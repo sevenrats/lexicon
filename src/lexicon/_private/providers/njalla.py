@@ -89,7 +89,8 @@ class Provider(BaseProvider):
                 "ttl": record["ttl"],
                 "content": content,
             })
-
+        print("PROCESSED RECORDS")
+        print(processed_records)
         filtered_records = [
             record
             for record in processed_records
