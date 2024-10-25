@@ -73,9 +73,9 @@ class Provider(BaseProvider):
         for record in records:
             if record["type"].lower() == "srv":
                 content = " ".join([
-                    record["prio"],
-                    record["weight"],
-                    record["port"],
+                    str(record["prio"]),
+                    str(record["weight"]),
+                    str(record["port"]),
                     record["content"],
                 ])
             else:
