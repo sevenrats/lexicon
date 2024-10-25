@@ -44,16 +44,23 @@ class Provider(BaseProvider):
         pass
 
     # Create record. If record already exists with the same content, do nothing'
-    def create_record(self, rtype, name, content):
-        if rtype.lower() == 'srv':
-            return self._create_srv(name, content)
+    def create_record(self, rtype, name, content, priority=None, weight=None, port=None):
         params = {
-            "domain": self.domain,
-            "type": rtype,
-            "name": name,
-            "content": content,
-            "ttl": 10800,
-        }
+                "domain": self.domain,
+                "type": rtype,
+                "name": name,
+                "content": content,
+                "ttl": 60,
+            }
+        if rtype.lower() == 'srv':
+            if any([x is None for x in [priority, weight, port]]):
+                raise Exception("Priority, weight, and port are required to create SRV records.")
+            params.update({
+                "prio": int(priority),
+                "weight": int(weight),
+                "port": int(port),
+            })
+            
         if self._get_lexicon_option("ttl"):
             params["ttl"] = self._get_lexicon_option("ttl")
         result = self._api_call("add-record", params)
@@ -64,43 +71,38 @@ class Provider(BaseProvider):
     # List all records. Return an empty list if no records found
     # type, name and content are used to filter records.
     # If possible filter during the query, otherwise filter after response is received.
-    def list_records(self, rtype=None, name=None, content=None):
+    def list_records(
+        self, rtype=None, name=None, content=None, priority=None, weight=None, port=None
+    ):
         params = {"domain": self.domain}
         result = self._api_call("list-records", params)
-
-        records = result["records"]
-        print("ALL RECORDS")
-        print(records)
         processed_records = []
-        for record in records:
-            if record["type"].lower() == "srv":
-                _content = " ".join([
-                    str(record["prio"]),
-                    str(record["weight"]),
-                    str(record["port"]),
-                    record["content"],
-                ])
-            else:
-                _content = record["content"]
-            processed_records.append({
+        for record in result["records"]:
+            new = {
                 "id": record["id"],
                 "type": record["type"],
                 "name": self._full_name(record["name"]),
                 "ttl": record["ttl"],
-                "content": _content,
-            })
-        print("PROCESSED RECORDS")
-        print(processed_records)
+                "content": record["content"],
+            }
+            if record["type"].lower() == "srv":
+                new.update({
+                    'priority': record["prio"]
+                    'weight': record["weight"]
+                    'port': record['port']
+                })
+            processed_records.append(new)
         filtered_records = [
             record for record in processed_records
             if (
                 (rtype is None or record["type"] == rtype)
                 and (name is None or record["name"] == self._full_name(name))
                 and (content is None or record["content"] == content)
+                and (priority is None or record["priority"] == priority)
+                and (weight is None or record["weight"] == weight)
+                and (port is None or record["port"] == port)
             )
         ]
-        print("FILTERED RECORDS")
-        print(filtered_records)
         LOGGER.debug("list_records: %s", filtered_records)
         return filtered_records
 
@@ -108,6 +110,9 @@ class Provider(BaseProvider):
     def update_record(self, identifier, rtype=None, name=None, content=None):
         if not identifier:
             identifier = self._get_record_identifier(rtype=rtype, name=name)
+        
+        if rtype.lower()=="srv":
+            raise Exception("Modifying SRV via API needs to be implemented.")
 
         params = {"id": identifier, "domain": self.domain, "content": content}
         result = self._api_call("edit-record", params)
@@ -128,24 +133,6 @@ class Provider(BaseProvider):
 
         LOGGER.debug("delete_record: %s", True)
         return True
-    
-    def _create_srv(self, name, content):
-        parts = content.split()
-        params = {
-            "domain": self.domain,
-            "type": "SRV",
-            "ttl": 60,
-            "name": name,
-            "prio": int(parts[0]),
-            "weight": int(parts[1]),
-            "port": int(parts[2]),
-            "content": parts[3],
-        }
-        if self._get_lexicon_option("ttl"):
-            params["ttl"] = self._get_lexicon_option("ttl")
-        result = self._api_call("add-record", params)
-        LOGGER.debug("create_record: %s", result)
-        return result
 
     # Helpers
     def _api_call(self, method, params):
