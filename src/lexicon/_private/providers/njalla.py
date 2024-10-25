@@ -69,6 +69,8 @@ class Provider(BaseProvider):
         result = self._api_call("list-records", params)
 
         records = result["records"]
+        print("ALL RECORDS")
+        print(records)
         processed_records = []
         for record in records:
             if record["type"].lower() == "srv":
